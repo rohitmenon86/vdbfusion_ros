@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(vdbfusion_ros)
 
 set(CMAKE_CXX_STANDARD 17)
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # System dependencies are found with CMake's conventions
 include(GNUInstallDirs)
 list(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/OpenVDB")

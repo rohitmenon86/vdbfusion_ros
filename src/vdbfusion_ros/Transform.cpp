@@ -1,10 +1,26 @@
 #include "Transform.hpp"
 
+#include <geometry_msgs/Transform.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
-#include <tf2_sensor_msgs/tf2_sensor_msgs.h>
+#include <tf2_ros/transform_listener.h>
 
+#include <deque>
+
+#include "sophus/se3.hpp"
+
+using geometry_msgs::Transform;
 using geometry_msgs::TransformStamped;
+
+void invertTransform(TransformStamped& tf) {
+    tf.transform = SE3ToTransform(TransformToSE3(tf.transform).inverse());
+}
+
+Transform interpolate(const Transform& tf_old, const Transform& tf_new, const double alpha) {
+    auto T_old = TransformToSE3(tf_old);
+    auto T_new = TransformToSE3(tf_new);
+    return SE3ToTransform(T_old * Sophus::SE3d::exp(alpha * ((T_old.inverse() * T_new).log())));
+}
 
 vdbfusion::Transform::Transform(ros::NodeHandle& nh) : buffer_(ros::Duration(50, 0)), tf_(buffer_) {
     ROS_INFO("Transform init");
@@ -17,6 +33,28 @@ vdbfusion::Transform::Transform(ros::NodeHandle& nh) : buffer_(ros::Duration(50,
         nh.getParam("/tf_topic", tf_topic);
         const int queue_size = 500;
         tf_sub_ = nh.subscribe(tf_topic, queue_size, &vdbfusion::Transform::tfCallback, this);
+
+        float tx, ty, tz, x, y, z, w;
+        nh.getParam("/tx", tx);
+        nh.getParam("/ty", ty);
+        nh.getParam("/tz", tz);
+        nh.getParam("/x", x);
+        nh.getParam("/y", y);
+        nh.getParam("/z", z);
+        nh.getParam("/w", w);
+        static_tf_.transform.translation.x = tx;
+        static_tf_.transform.translation.y = ty;
+        static_tf_.transform.translation.z = tz;
+        static_tf_.transform.rotation.x = x;
+        static_tf_.transform.rotation.y = y;
+        static_tf_.transform.rotation.z = z;
+        static_tf_.transform.rotation.w = w;
+
+        bool invert_static_tf;
+        nh.getParam("/invert_static_tf", invert_static_tf);
+        if (invert_static_tf) {
+            invertTransform(static_tf_);
+        }
     }
 }
 
@@ -54,20 +92,46 @@ bool vdbfusion::Transform::lookUpTransformQ(const ros::Time& timestamp,
                                          << timestamp << " as transform queue is empty.");
         return false;
     }
-
-    for (const auto& tf : tf_queue_) {
-        if (tf.header.stamp > timestamp) {
-            if ((tf.header.stamp - timestamp).toNSec() < tolerance.toNSec()) {
-                transform = tf;
-                return true;
+    bool match_found = false;
+    std::deque<geometry_msgs::TransformStamped>::iterator it = tf_queue_.begin();
+    for (; it != tf_queue_.end(); ++it) {
+        if (it->header.stamp > timestamp) {
+            if ((it->header.stamp - timestamp).toNSec() < tolerance.toNSec()) {
+                match_found = true;
             }
             break;
         }
 
-        if ((timestamp - tf.header.stamp).toNSec() < tolerance.toNSec()) {
-            transform = tf;
-            return true;
+        if ((timestamp - it->header.stamp).toNSec() < tolerance.toNSec()) {
+            match_found = true;
+            break;
         }
     }
-    return false;
+
+    if (match_found) {
+        transform = *it;
+    } else {
+        if (it == tf_queue_.begin() || it == tf_queue_.end()) {
+            ROS_WARN_STREAM_THROTTLE(30, "No match found for transform timestamp: " << timestamp);
+            return false;
+        }
+        TransformStamped tf_newest = *it;
+        int64_t newest_timestamp_ns = it->header.stamp.toNSec();
+        --it;
+        TransformStamped tf_oldest = *it;
+        int64_t oldest_timestamp_ns = it->header.stamp.toNSec();
+
+        double alpha = 0.0;
+        if (newest_timestamp_ns != oldest_timestamp_ns) {
+            alpha = static_cast<double>(timestamp.toNSec() - oldest_timestamp_ns) /
+                    static_cast<double>(newest_timestamp_ns - oldest_timestamp_ns);
+        }
+        transform.transform = interpolate(tf_oldest.transform, tf_newest.transform, alpha);
+    }
+
+    transform.transform = SE3ToTransform(TransformToSE3(transform.transform) *
+                                         (TransformToSE3(static_tf_.transform).inverse()));
+
+    tf_queue_.erase(tf_queue_.begin(), it);
+    return true;
 }

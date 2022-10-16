@@ -25,3 +25,15 @@ child_frame: # (string)
 # if using TransformStamped msg on custom topic
 use_tf_transforms: false
 tf_topic: # (string)
+
+# Static Transform
+invert_static_tf: # (bool)
+# Translation
+tx: # (float)
+ty: # (float)
+tz: # (float)
+# Rotation Quaternion
+x: # (float)
+y: # (float)
+z: # (float)
+w: # (float)

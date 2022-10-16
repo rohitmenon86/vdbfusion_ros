@@ -1,17 +1,13 @@
 #include "VDBVolume_ros.hpp"
 
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/Transform.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <tf/transform_listener.h>
-#include <tf2_msgs/TFMessage.h>
 #include <tf2_sensor_msgs/tf2_sensor_msgs.h>
 
 #include <Eigen/Core>
-#include <iostream>
 #include <vector>
 
 #include "igl/write_triangle_mesh.h"
@@ -80,14 +76,14 @@ vdbfusion::VDBVolumeNode::VDBVolumeNode() : vdb_volume_(InitVDBVolume()), tf_(nh
 
 void vdbfusion::VDBVolumeNode::Integrate(const sensor_msgs::PointCloud2& pcd) {
     geometry_msgs::TransformStamped transform;
-    sensor_msgs::PointCloud2 pcd_ = pcd;
+    sensor_msgs::PointCloud2 pcd_out;
 
     if (tf_.lookUpTransform(pcd.header.stamp, timestamp_tolerance_, transform)) {
         ROS_INFO("Transform available");
         if (apply_pose_) {
-            tf2::doTransform(pcd, pcd_, transform);
+            tf2::doTransform(pcd, pcd_out, transform);
         }
-        auto scan = pcl2SensorMsgToEigen(pcd_);
+        auto scan = pcl2SensorMsgToEigen(pcd_out);
 
         if (preprocess_) {
             PreProcessCloud(scan, min_range_, max_range_);

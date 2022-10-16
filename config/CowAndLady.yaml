@@ -1,7 +1,7 @@
 # VDBFUSION
 voxel_size: 0.02
 sdf_trunc: 0.06
-space_carving: False
+space_carving: True
 
 # Triangle Mesh Generation
 fill_holes: True
@@ -18,3 +18,15 @@ pcl_topic: "/camera/depth_registered/points"
 use_tf_transforms: False
 tf_topic: "/kinect/vrpn_client/estimated_transform"
 timestamp_tolerance_ns: 1000000
+
+# Static Transform
+invert_static_tf: True
+# Translation
+tx: 0.00114049
+ty: 0.0450936
+tz: 0.0430765
+# Rotation Quaternion
+x: 0.0924132
+y: 0.0976455
+z: 0.0702949
+w: 0.9884249

@@ -35,8 +35,7 @@ As an extra dependency install: `sudo apt install ros-noetic-tf2-sensor-msgs`.
 On your catkin workspace, clone the vdbfusion_ros:
 ```sh
 cd catkin_ws/src/
-git clone https://github.com/saurabh1002/vdbfusion_ros.git
-catkin init
+git clone https://github.com/PRBonn/vdbfusion_ros.git
 catkin build
   ```
 
