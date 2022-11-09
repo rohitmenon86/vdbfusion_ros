@@ -25,7 +25,7 @@ mkdir build && cd build && cmake  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DUSE_ZLI
 ```sh
 git clone --depth 1 https://github.com/PRBonn/vdbfusion.git && cd vdbfusion
 mkdir build && cd build && cmake .. &&  sudo make -j$(nproc) all install
- ```
+```
 
 ### ROS
 
@@ -33,11 +33,12 @@ For now only [ROS Noetic](http://wiki.ros.org/noetic) is supported.
 
 As an extra dependency install: `sudo apt install ros-noetic-tf2-sensor-msgs`.
 On your catkin workspace, clone the vdbfusion_ros:
+
 ```sh
 cd catkin_ws/src/
 git clone https://github.com/PRBonn/vdbfusion_ros.git
 catkin build
-  ```
+```
 
 ## Usage
 
@@ -83,6 +84,7 @@ Use the [rosservice](README.md#save-the-vdb-grid-and-extract-triangle-mesh) to s
 
 
 ## Citation
+
 If you use this library for any academic work, please cite the original [paper](https://www.ipb.uni-bonn.de/wp-content/papercite-data/pdf/vizzo2022sensors.pdf).
 
 ```bibtex
@@ -99,3 +101,9 @@ If you use this library for any academic work, please cite the original [paper](
   doi            = {10.3390/s22031296}
 }
 ```
+
+## Others
+
+Here is [another ROS1 version](https://github.com/Kin-Zhang/vdbfusion_mapping) from [Kin ZHANG](https://github.com/Kin-Zhang) since there is a little different transform on [ETH Zurich ASL: Cow and Lady RGBD Dataset](https://projects.asl.ethz.ch/datasets/doku.php?id=iros2017). This implementation will get correct results as the origin vdbfusion, please check more on issue: https://github.com/PRBonn/vdbfusion_ros/issues/2. The result screenshot shown here with RGB involved also:
+
+![image](https://user-images.githubusercontent.com/35365764/200626528-a657a0e6-2fca-48d7-8b34-d8619b6f33e8.png)
