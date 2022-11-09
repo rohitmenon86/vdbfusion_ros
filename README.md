@@ -76,12 +76,11 @@ Download the dataset rosbag files from the respective links
 ### [KITTI Dataset](http://www.cvlibs.net/datasets/kitti/raw_data.php)
 
 - Convert the dataset into a rosbag file using [kitti2bag](https://github.com/tomas789/kitti2bag)
-- Use the sample [config file](config/KITTI.yaml) provided for this dataset 
+- Use the sample [config file](config/KITTI.yaml) provided for this dataset
 
 Run the [launch](README.md#launch) command providing config file and rosbag path corresponding to the dataset.
 
 Use the [rosservice](README.md#save-the-vdb-grid-and-extract-triangle-mesh) to save the VDB volume and mesh
-
 
 ## Citation
 
@@ -102,8 +101,6 @@ If you use this library for any academic work, please cite the original [paper](
 }
 ```
 
-## Others
+## Others ROS wrappers around VDBFusion
 
-Here is [another ROS1 version](https://github.com/Kin-Zhang/vdbfusion_mapping) from [Kin ZHANG](https://github.com/Kin-Zhang) since there is a little different transform on [ETH Zurich ASL: Cow and Lady RGBD Dataset](https://projects.asl.ethz.ch/datasets/doku.php?id=iros2017). This implementation will get correct results as the origin vdbfusion, please check more on issue: https://github.com/PRBonn/vdbfusion_ros/issues/2. The result screenshot shown here with RGB involved also:
-
-![image](https://user-images.githubusercontent.com/35365764/200626528-a657a0e6-2fca-48d7-8b34-d8619b6f33e8.png)
+- [vdbfusion_mapping](https://github.com/Kin-Zhang/vdbfusion_mapping): originated to solve [transformation issues](https://github.com/PRBonn/vdbfusion_ros/issues/2) and with color support ![image](https://user-images.githubusercontent.com/35365764/200626528-a657a0e6-2fca-48d7-8b34-d8619b6f33e8.png)
