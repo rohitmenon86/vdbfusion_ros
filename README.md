@@ -104,3 +104,5 @@ If you use this library for any academic work, please cite the original [paper](
 ## Others ROS wrappers around VDBFusion
 
 - [vdbfusion_mapping](https://github.com/Kin-Zhang/vdbfusion_mapping): originated to solve [transformation issues](https://github.com/PRBonn/vdbfusion_ros/issues/2) and with color support ![image](https://user-images.githubusercontent.com/35365764/200626528-a657a0e6-2fca-48d7-8b34-d8619b6f33e8.png)
+- [vdbfusion_mapping_docker](https://github.com/nachovizzo/vdbfusion_mapping). Same as above, but running in a dockerized enviornment
+
