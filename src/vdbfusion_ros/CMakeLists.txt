@@ -22,7 +22,7 @@
 
 add_library(transforms STATIC Transform.cpp)
 target_link_libraries(transforms PUBLIC
-  sophus::sophus
+  Sophus::Sophus
 )
 target_include_directories(transforms PRIVATE
   ${catkin_INCLUDE_DIRS}
