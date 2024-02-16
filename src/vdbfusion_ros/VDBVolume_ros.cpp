@@ -47,12 +47,12 @@ std::vector<Eigen::Vector3d> pcl2SensorMsgToEigen(const sensor_msgs::PointCloud2
     return points;
 }
 
-sensor_msgs::PointCloud2 eigenToPointCloud2(const Eigen::MatrixXd& vertices) {
+sensor_msgs::PointCloud2 eigenToPointCloud2(const Eigen::MatrixXd& vertices, const std::string& frame_id) {
     sensor_msgs::PointCloud2 cloud_msg;
 
     // Populate header
     cloud_msg.header.stamp = ros::Time::now();
-    cloud_msg.header.frame_id = "your_frame_id"; // Set appropriate frame ID
+    cloud_msg.header.frame_id = frame_id; // Set appropriate frame ID
 
     // Populate point cloud fields
     sensor_msgs::PointCloud2Modifier modifier(cloud_msg);
@@ -137,6 +137,10 @@ void vdbfusion::VDBVolumeNode::Integrate(const sensor_msgs::PointCloud2& pcd) {
         ROS_INFO("Transform available");
         if (apply_pose_) {
             tf2::doTransform(pcd, pcd_out, transform);
+            if(vdbvol_frame_id_stored_ == false)  {
+                vdbvol_frame_id_ = pcd_out.header.frame_id;
+                vdbvol_frame_id_stored_ = true;
+            }
         }
         auto scan = pcl2SensorMsgToEigen(pcd_out);
 
@@ -185,14 +189,13 @@ bool vdbfusion::VDBVolumeNode::pubVDBVolumeAsPointCloud(std_srvs::EmptyRequest& 
         V.row(i) = Eigen::VectorXd::Map(&vertices[i][0], vertices[i].size());
     }
 
-    auto cloud_msg = eigenToPointCloud2(V);
-    cloud_msg.header.frame_id = "trolley_local_link";
+    auto cloud_msg = eigenToPointCloud2(V, vdbvol_frame_id_);
 
     auto t_end = ros::Time::now();
 
     pub_cloud_.publish(cloud_msg);
     
-    ROS_INFO_STREAM("++++++++++Done publishing+++++++++++++ PTS: "<<vertices.size()<<"\t TIME: "<<(t_end-t_start).toSec());
+    ROS_INFO_STREAM("Created surface point cloud from vdb volume in time : " <<(t_end-t_start).toSec()<< "with "<<(cloud_msg.height*cloud_msg.width)<<" points in frame "<<vdbvol_frame_id_ );
     return true;
 }
 

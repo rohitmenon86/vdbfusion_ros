@@ -51,6 +51,8 @@ private:
     ros::Publisher pub_cloud_;
     Transform tf_;
     ros::Duration timestamp_tolerance_;
+    std::string vdbvol_frame_id_;
+    bool vdbvol_frame_id_stored_ = false;
 
 private:
     VDBVolume vdb_volume_;
