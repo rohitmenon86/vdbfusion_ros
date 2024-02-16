@@ -28,6 +28,7 @@
 #include "Transform.hpp"
 #include "vdbfusion/VDBVolume.h"
 #include "vdbfusion_ros/save_vdb_volume.h"
+#include <std_srvs/Empty.h>
 
 namespace vdbfusion {
 class VDBVolumeNode {
@@ -40,10 +41,14 @@ private:
     bool saveVDBVolume(vdbfusion_ros::save_vdb_volume::Request& path,
                        vdbfusion_ros::save_vdb_volume::Response& response);
 
+    bool pubVDBVolumeAsPointCloud(std_srvs::EmptyRequest& req, std_srvs::EmptyResponse& res);
+
 private:
     ros::NodeHandle nh_;
     ros::Subscriber sub_;
     ros::ServiceServer srv_;
+    ros::ServiceServer srv_pub_;
+    ros::Publisher pub_cloud_;
     Transform tf_;
     ros::Duration timestamp_tolerance_;
 

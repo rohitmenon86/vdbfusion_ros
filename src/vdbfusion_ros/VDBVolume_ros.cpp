@@ -47,6 +47,36 @@ std::vector<Eigen::Vector3d> pcl2SensorMsgToEigen(const sensor_msgs::PointCloud2
     return points;
 }
 
+sensor_msgs::PointCloud2 eigenToPointCloud2(const Eigen::MatrixXd& vertices) {
+    sensor_msgs::PointCloud2 cloud_msg;
+
+    // Populate header
+    cloud_msg.header.stamp = ros::Time::now();
+    cloud_msg.header.frame_id = "your_frame_id"; // Set appropriate frame ID
+
+    // Populate point cloud fields
+    sensor_msgs::PointCloud2Modifier modifier(cloud_msg);
+    modifier.setPointCloud2Fields(3, "x", 1, sensor_msgs::PointField::FLOAT32,
+                                  "y", 1, sensor_msgs::PointField::FLOAT32,
+                                  "z", 1, sensor_msgs::PointField::FLOAT32);
+
+    // Resize point cloud
+    modifier.resize(vertices.rows());
+
+    // Copy vertex data into the point cloud message
+    sensor_msgs::PointCloud2Iterator<float> iter_x(cloud_msg, "x");
+    sensor_msgs::PointCloud2Iterator<float> iter_y(cloud_msg, "y");
+    sensor_msgs::PointCloud2Iterator<float> iter_z(cloud_msg, "z");
+
+    for (int i = 0; i < vertices.rows(); ++i, ++iter_x, ++iter_y, ++iter_z) {
+        *iter_x = vertices(i, 0); // x-coordinate
+        *iter_y = vertices(i, 1); // y-coordinate
+        *iter_z = vertices(i, 2); // z-coordinate
+    }
+
+    return cloud_msg;
+}
+
 void PreProcessCloud(std::vector<Eigen::Vector3d>& points, float min_range, float max_range) {
     points.erase(
         std::remove_if(points.begin(), points.end(), [&](auto p) { return p.norm() > max_range; }),
@@ -92,6 +122,9 @@ vdbfusion::VDBVolumeNode::VDBVolumeNode() : vdb_volume_(InitVDBVolume()), tf_(nh
 
     sub_ = nh_.subscribe(pcl_topic, queue_size, &vdbfusion::VDBVolumeNode::Integrate, this);
     srv_ = nh_.advertiseService("/save_vdb_volume", &vdbfusion::VDBVolumeNode::saveVDBVolume, this);
+
+    srv_pub_ = nh_.advertiseService("/pub_vdb_cloud", &vdbfusion::VDBVolumeNode::pubVDBVolumeAsPointCloud, this);
+    pub_cloud_ = nh_.advertise<sensor_msgs::PointCloud2>("vdb_cloud", 1, true);
 
     ROS_INFO("Use '/save_vdb_volume' service to save the integrated volume");
 }
@@ -139,6 +172,27 @@ bool vdbfusion::VDBVolumeNode::saveVDBVolume(vdbfusion_ros::save_vdb_volume::Req
     }
     igl::write_triangle_mesh(volume_name + "_mesh.ply", V, F, igl::FileEncoding::Binary);
     ROS_INFO("Done saving the mesh and VDB grid files");
+    return true;
+}
+
+bool vdbfusion::VDBVolumeNode::pubVDBVolumeAsPointCloud(std_srvs::EmptyRequest& req, std_srvs::EmptyResponse& res) {
+    auto t_start = ros::Time::now();
+    auto [vertices, triangles] =
+        this->vdb_volume_.ExtractTriangleMesh(this->fill_holes_, this->min_weight_);
+
+    Eigen::MatrixXd V(vertices.size(), 3);
+    for (size_t i = 0; i < vertices.size(); i++) {
+        V.row(i) = Eigen::VectorXd::Map(&vertices[i][0], vertices[i].size());
+    }
+
+    auto cloud_msg = eigenToPointCloud2(V);
+    cloud_msg.header.frame_id = "trolley_local_link";
+
+    auto t_end = ros::Time::now();
+
+    pub_cloud_.publish(cloud_msg);
+    
+    ROS_INFO_STREAM("++++++++++Done publishing+++++++++++++ PTS: "<<vertices.size()<<"\t TIME: "<<(t_end-t_start).toSec());
     return true;
 }
 

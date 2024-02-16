@@ -56,6 +56,7 @@ catkin_package(
   tf2_ros
   tf2_sensor_msgs
   std_msgs
+  std_srvs
   geometry_msgs
   sensor_msgs
   message_runtime)
